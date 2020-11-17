@@ -12,9 +12,10 @@ A replication of [The Diversity–Innovation Paradox in Science](https://www.pna
 Diversity breeds innovation, yet underrepresented groups that diversify organizations have less successful careers within them.
 
 ## Research Questions
-1. How do we detect scientific innovations of repositories?
-2. Are diverse groups ([in terms of gender and tenure](https://cmustrudel.github.io/papers/chi15.pdf)) more likely to generate innovations at Open Source Communities? 
-3. Are the innovations of diverse groups more often adopted and rewarded?
+1. How do we detect innovations in open source projects?
+2. What are different measurements of diversity of groups of open source contributors?
+3. Are diverse groups ([in terms of gender and tenure](https://cmustrudel.github.io/papers/chi15.pdf), and distribution of work) of contributors more likely to generate innovations?
+4. Does more innovations from an individual mean a longer open course career?
 
 ## Variables
 
