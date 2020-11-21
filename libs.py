@@ -29,13 +29,9 @@ for proj in proj_libs_map:
         proj_libs.add(new_lib)
 
 innovation_map = {}
-author_innovations_map = {}
 
 for pair in co_occ_map:
   sorted_entries = sorted(co_occ_map[pair], key = lambda t: t[0])
   t, a, p = sorted_entries[0]
   innovation_map[pair] = (t, a, p)
-  if a not in author_innovations_map:
-    author_innovations_map[a] = []
-  author_innovations_map[a].append((pair, t, p))
 
