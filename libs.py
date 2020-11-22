@@ -37,7 +37,7 @@ for pair in co_occ_map:
   innovation_map[pair] = (t, a, p)
 
 f = 'innovations.js.csv'
-with open(f, 'w', newline = '') as csvf:
+with open(f, 'w') as csvf:
   writer = csv.writer(csvf)
   writer.writerow(('innovation', 'time', 'author', 'project'))
   for pair in innovation_map:
