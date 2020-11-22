@@ -1,4 +1,5 @@
 import sys
+import csv
 
 proj_libs_map = {}
 
@@ -34,4 +35,12 @@ for pair in co_occ_map:
   sorted_entries = sorted(co_occ_map[pair], key = lambda t: t[0])
   t, a, p = sorted_entries[0]
   innovation_map[pair] = (t, a, p)
+
+f = 'innovations.js.csv'
+with open(f, 'w', newline = '') as csvf:
+  writer = csv.writer(csvf)
+  writer.writerow(('innovation', 'time', 'author', 'project'))
+  for pair in innovation_map:
+    t, a, p = innovation_map[pair]
+    writer.writerow((str(pair), t, a, p))
 
