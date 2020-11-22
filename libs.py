@@ -36,11 +36,21 @@ for pair in co_occ_map:
   t, a, p = sorted_entries[0]
   innovation_map[pair] = (t, a, p)
 
-f = 'innovations.js.csv'
-with open(f, 'w') as csvf:
-  writer = csv.writer(csvf)
-  writer.writerow(('innovation', 'time', 'author', 'project'))
-  for pair in innovation_map:
-    t, a, p = innovation_map[pair]
-    writer.writerow((str(pair), t, a, p))
+fc = 0
+def f():
+  global fc
+  fn = 'data/innovations.js.' + str(fc) + '.csv'
+  fc += 1
+  return fn
+ps = innovation_map.keys()
+np, up = 0, 1000000
+while up <= len(ps):
+  with open(f(), 'w') as csvf:
+    writer = csv.writer(csvf)
+    writer.writerow(('innovation', 'time', 'author', 'project'))
+    for pr in ps[np:up]:
+      t, a, pj = innovation_map[pr]
+      writer.writerow((pr, t, a, pj))
+  np = up
+  up = np + 1000000
 
