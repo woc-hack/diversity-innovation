@@ -36,6 +36,7 @@ for pair in co_occ_map:
   t, a, p = sorted_entries[0]
   innovation_map[pair] = (t, a, p)
 
+# write innovation_map into multiple csv files
 fc = 0
 def f():
   global fc
@@ -44,7 +45,7 @@ def f():
   return fn
 ps = innovation_map.keys()
 np, up = 0, 1000000
-while up <= len(ps):
+while np < len(ps):
   with open(f(), 'w') as csvf:
     writer = csv.writer(csvf)
     writer.writerow(('innovation', 'time', 'author', 'project'))
