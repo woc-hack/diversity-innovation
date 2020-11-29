@@ -1,41 +1,86 @@
-import sys
-import csv
-
 def parseline(line):
+  """ parse by line from PtaPkgRJS.{0..127}.s tables
+  entries format is project, time, author, packages """
   tokens = line.strip().split(';')
-  return tokens[0], tokens[1], tokens[2], tokens[3], tokens[4], tokens[5:]
+  project, timestamp, author, packages = tokens[0], tokens[1], tokens[2], tokens[3:]
+  return project, timestamp, author, packages
+
+def write_project_packages_mem_table(table):
+  """ to run script on raw data tables one by one (to avoid consuming too much memory)
+  we need to memorize most up-to-date project packages table """
+  with open('data/ppkgs.mem', 'w') as f:
+    for project in table:
+      packages = table[project]
+      f.write(project + ';' + ';'.join(packages) + '\n')
+    print('Written project packages mem table')
+    return
+
+def read_project_packages_mem_table():
+  """ counterpart to write_project_packages_mem_table,
+  read the most up-to-date project packages table as baseline for future innovation """
+  with open('data/ppkgs.mem', 'r') as f:
+    table = {}
+    for line in f:
+      tokens = line.strip().split(';')
+      if len(tokens) <= 1: # ignore invalid lines
+        continue
+      project, packages = tokens[0], tokens[1:]
+      table[project] = set(packages)
+    print('Read project packages mem table with ' + str(len(table)) + ' project entries')
+    return table
+
+def write_innovations_mem_table(table):
+  """ run script on raw tables one by one produce innovations map each time """
+  with open('data/innos.mem', 'w') as f:
+    for innovation in table:
+      project, timestamp, author, count = table[innovation]
+      pkgA, pkgB = innovation
+      f.write(';'.join([pkgA, pkgB, project, timestamp, author, str(count)]) + '\n')
+    print('Written innovations mem table')
+    return
+
+def read_innovations_mem_table():
+  """ counterpart to write_innovations_mem_table,
+  read innovations seen so far as baseline for future innovation updates """
+  with open('data/innos.mem', 'r') as f:
+    table = {}
+    for line in f:
+      tokens = line.strip().split(';')
+      if len(tokens) < 6: # ignore invalid lines
+        continue
+      innovation = (tokens[0], tokens[1])
+      project, timestamp, author = tokens[2], tokens[3], tokens[4]
+      count = int(tokens[5])
+      table[innovation] = (project, timestamp, author, count)
+    print('Read innovations mem table with ' + str(len(table)) + ' innovation entries')
+    return table
 
 if __name__ == '__main__':
-  import sys
-  import csv
-  proj_libs_map = {}
+# project -> seen packages set
+  project_packages_map = read_project_packages_mem_table()
+# package pair -> (earliest seen) project, timestamp, author, occurance count
+  innovations = read_innovations_mem_table()
 
   for line in sys.stdin:
-    _b, _c, proj, t, a, libs = parseline(line)
-    if proj not in proj_libs_map:
-      proj_libs_map[proj] = []
-    proj_libs_map[proj].append((t, a, libs))
+    project, timestamp, author, packages = parseline(line)
+    if project not in project_packages_map:
+      project_packages_map[project] = set() # initialize
+    for new_package in packages: # consider new package with every existing package
+      if new_package in project_packages_map[project]:
+        continue # package is already in current packages
+      for current_package in project_packages_map[project]:
+        pair = tuple(sorted([new_package, current_package])) # unorder
+        if pair not in innovations:
+          innovations[pair] = (project, timestamp, author, 1)
+        else: # update innovation for this pair if necessary
+          current_project, current_timestamp, current_author, current_count = innovations[pair]
+          if timestamp < current_timestamp: # update innovation
+            innovations[pair] = (project, timestamp, author, 1 + current_count)
+          else: # only update count
+            innovations[pair] = (current_project, current_timestamp, current_author, 1 + current_count)
+      # after new package innovations are done, put new package into current packages
+      project_packages_map[project].add(new_package)
 
-  co_occ_map = {} # map from a pair of co-occurrance libs to list of timed edges
-
-  for proj in proj_libs_map:
-    entries = sorted(proj_libs_map[proj], key = lambda t: t[0])
-    proj_libs = set() # seen proj libs up to some timestamp
-    for t, a, libs in entries:
-      for new_lib in libs:
-        if new_lib not in proj_libs:
-          for current_proj_lib in proj_libs:
-            # add edge {new_lib, current_proj_lib} to co-occ map
-            pair = tuple(sorted([new_lib, current_proj_lib]))
-            if pair not in co_occ_map:
-              co_occ_map[pair] = []
-            co_occ_map[pair].append((t, a, proj))
-          proj_libs.add(new_lib)
-
-  innovation_map = {}
-
-  for pair in co_occ_map:
-    sorted_entries = sorted(co_occ_map[pair], key = lambda t: t[0])
-    t, a, p = sorted_entries[0]
-    innovation_map[pair] = (t, a, p)
+  write_project_packages_mem_table(project_packages_map)
+  write_innovations_mem_table(innovations)
 
