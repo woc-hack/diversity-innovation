@@ -1,4 +1,5 @@
 import sys
+import datetime
 
 def parseline(line):
   """ parse by line from PtaPkgRJS.{0..127}.s tables
@@ -10,7 +11,7 @@ def parseline(line):
 def write_project_packages_mem_table(table):
   """ to run script on raw data tables one by one (to avoid consuming too much memory)
   we need to memorize most up-to-date project packages table """
-  with open('data/ppkgs.mem', 'w') as f:
+  with open('data/ppkgs.mem.test', 'w') as f:
     for project in table:
       packages = table[project]
       f.write(project + ';' + ';'.join(packages) + '\n')
@@ -20,7 +21,7 @@ def write_project_packages_mem_table(table):
 def read_project_packages_mem_table():
   """ counterpart to write_project_packages_mem_table,
   read the most up-to-date project packages table as baseline for future innovation """
-  with open('data/ppkgs.mem', 'r') as f:
+  with open('data/ppkgs.mem.test', 'r') as f:
     table = {}
     for line in f:
       tokens = line.strip().split(';')
@@ -33,7 +34,7 @@ def read_project_packages_mem_table():
 
 def write_innovations_mem_table(table):
   """ run script on raw tables one by one produce innovations map each time """
-  with open('data/innos.mem', 'w') as f:
+  with open('data/innos.mem.test', 'w') as f:
     for innovation in table:
       project, timestamp, author, count = table[innovation]
       pkgA, pkgB = innovation
@@ -44,7 +45,7 @@ def write_innovations_mem_table(table):
 def read_innovations_mem_table():
   """ counterpart to write_innovations_mem_table,
   read innovations seen so far as baseline for future innovation updates """
-  with open('data/innos.mem', 'r') as f:
+  with open('data/innos.mem.test', 'r') as f:
     table = {}
     for line in f:
       tokens = line.strip().split(';')
@@ -63,7 +64,12 @@ if __name__ == '__main__':
 # package pair -> (earliest seen) project, timestamp, author, occurance count
   innovations = read_innovations_mem_table()
 
+  line_count = 0
   for line in sys.stdin:
+    line_count += 1
+    if line_count % 100000 == 0:
+      print(datetime.datetime.now())
+      print('Processing input line ' + str(line_count))
     project, timestamp, author, packages = parseline(line)
     if project not in project_packages_map:
       project_packages_map[project] = set() # initialize
