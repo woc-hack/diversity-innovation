@@ -1,3 +1,5 @@
+import sys
+
 def parseline(line):
   """ parse by line from PtaPkgRJS.{0..127}.s tables
   entries format is project, time, author, packages """
