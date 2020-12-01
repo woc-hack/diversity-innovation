@@ -59,6 +59,20 @@ def read_innovations_mem_table():
     return table
 
 if __name__ == '__main__':
+
+  if len(sys.argv) >= 2 and sys.argv[1] == 'projects':
+    projects = {}
+    for line in sys.stdin:
+      project, _t, _a, _p = parseline(line)
+      if project not in projects:
+        projects[project] = 1
+      else:
+        projects[project] = projects[project] + 1
+    topkeys = sorted(projects.keys(), key = lambda p: projects[p], reverse = True)
+    for project in topkeys:
+      print(project)
+    sys.exit(0)
+
 # project -> seen packages set
   project_packages_map = read_project_packages_mem_table()
 # package pair -> (earliest seen) project, timestamp, author, occurance count
