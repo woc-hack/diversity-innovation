@@ -73,6 +73,25 @@ if __name__ == '__main__':
       print(project)
     sys.exit(0)
 
+  if len(sys.argv) >= 3 and sys.argv[1] == 'in-project-innos':
+    project = sys.argv[2]
+    current_packages = set()
+    innovations = {}
+    for line in sys.stdin:
+      _p, timestamp, author, packages = parseline(line)
+      for new_package in packages: # consider new package with every current package
+        if new_package in current_packages:
+          continue # ignore package already in current packages
+        for current_package in current_packages:
+          pair = tuple(sorted([new_package, current_package]))
+          # it is not possible for pair to be already in innovations
+          innovations[pair] = (project, timestamp, author)
+        current_packages.add(new_package)
+    for pair in innovations:
+      pkgA, pkgB = pair
+      print(';'.join([pkgA, pkgB, project, timestamp, author, '1']))
+    sys.exit(0)
+
 # project -> seen packages set
   project_packages_map = read_project_packages_mem_table()
 # package pair -> (earliest seen) project, timestamp, author, occurance count
@@ -94,12 +113,9 @@ if __name__ == '__main__':
         pair = tuple(sorted([new_package, current_package])) # unorder
         if pair not in innovations:
           innovations[pair] = (project, timestamp, author, 1)
-        else: # update innovation for this pair if necessary
+        else: # innovation exists, only update count
           current_project, current_timestamp, current_author, current_count = innovations[pair]
-          if timestamp < current_timestamp: # update innovation
-            innovations[pair] = (project, timestamp, author, 1 + current_count)
-          else: # only update count
-            innovations[pair] = (current_project, current_timestamp, current_author, 1 + current_count)
+          innovations[pair] = (current_project, current_timestamp, current_author, 1 + current_count)
       # after new package innovations are done, put new package into current packages
       project_packages_map[project].add(new_package)
 
