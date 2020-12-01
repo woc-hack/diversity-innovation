@@ -70,7 +70,7 @@ if __name__ == '__main__':
         projects[project] = projects[project] + 1
     topkeys = sorted(projects.keys(), key = lambda p: projects[p], reverse = True)
     for project in topkeys:
-      print(project + ';' + str(projects[project]))
+      print(project)
     sys.exit(0)
 
 # project -> seen packages set
