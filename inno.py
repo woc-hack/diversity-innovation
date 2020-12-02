@@ -113,9 +113,6 @@ if __name__ == '__main__':
 
   for line in sys.stdin:
     line_count += 1
-    if stdin_limit is not None and line_count > stdin_limit:
-      break # ignore more stdin if limit specified
-
     if line_count % 500 == 0:
       print('[debug] {' + str(datetime.datetime.now()) + '} Processing stdin line ' + str(line_count) + '.')
 
@@ -135,6 +132,9 @@ if __name__ == '__main__':
           innovations[pair] = (current_project, current_timestamp, current_author, 1 + current_count)
       # after new package innovations are done, put new package into current packages
       project_packages_map[project].add(new_package)
+
+    if stdin_limit is not None and line_count >= stdin_limit:
+      break # ignore more stdin if limit specified
 
   print('[debug] {' + str(datetime.datetime.now()) + '} Done innovations from stdin. Start write new mem tables.')
   write_project_packages_mem_table(project_packages_map)
