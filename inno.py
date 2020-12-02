@@ -143,7 +143,7 @@ if __name__ == '__main__':
         # after new package innovations are done, put new package into current packages
         project_packages_map[project].add(new_package)
 
-      if line_count % 1000 == 999:
+      if line_count % 10000 == 9999:
         print('[debug] {' + str(datetime.datetime.now()) + '} Done processing stdin line ' + str(line_count) + '.')
 
   print('[debug] {' + str(datetime.datetime.now()) + '} Done innovations from stdin. Start write new mem tables.')
