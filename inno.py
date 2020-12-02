@@ -113,8 +113,6 @@ if __name__ == '__main__':
 
   for line in sys.stdin:
     line_count += 1
-    if line_count % 500 == 0:
-      print('[debug] {' + str(datetime.datetime.now()) + '} Processing stdin line ' + str(line_count) + '.')
 
     project, timestamp, author, packages = parseline(line)
     if project not in project_packages_map:
@@ -133,7 +131,12 @@ if __name__ == '__main__':
       # after new package innovations are done, put new package into current packages
       project_packages_map[project].add(new_package)
 
+    if line_count % 500 == 0:
+      print('[debug] {' + str(datetime.datetime.now()) + '} Done processing stdin line ' + str(line_count) + '.')
+    if stdin_limit is not None and line_count == stdin_limit - 1:
+      print('[debug] {' + str(datetime.datetime.now()) + '} Done second-to-last stdin line according to specified limit.')
     if stdin_limit is not None and line_count >= stdin_limit:
+      print('[debug] {' + str(datetime.datetime.now()) + '} Specified stdin limit is hit at ' + str(stdin_limit) + '.')
       break # ignore more stdin if limit specified
 
   print('[debug] {' + str(datetime.datetime.now()) + '} Done innovations from stdin. Start write new mem tables.')
