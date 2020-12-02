@@ -5,7 +5,7 @@ def parseline(line):
   """ parse by line from PtaPkgRJS.{0..127}.s tables
   entries format is project, time, author, packages """
   tokens = line.strip().split(';')
-  project, timestamp, author, packages = tokens[0], tokens[1], tokens[2], tokens[3:]
+  timestamp, project, author, packages = tokens[0], tokens[1], tokens[2], tokens[3:]
   return project, timestamp, author, packages
 
 def write_project_packages_mem_table(table):
