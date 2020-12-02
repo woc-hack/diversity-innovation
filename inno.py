@@ -97,12 +97,12 @@ if __name__ == '__main__':
 # package pair -> (earliest seen) project, timestamp, author, occurance count
   innovations = read_innovations_mem_table()
 
+  print('[debug] {' + str(datetime.datetime.now()) + '} Done read mem tables. Start read from stdin.')
   line_count = 0
   for line in sys.stdin:
     line_count += 1
-    if line_count % 100000 == 0:
-      print(datetime.datetime.now())
-      print('Processing input line ' + str(line_count))
+    if line_count % 500 == 0:
+      print('[debug] {' + str(datetime.datetime.now()) + '} Processing stdin line ' + str(line_count) + '.')
     project, timestamp, author, packages = parseline(line)
     if project not in project_packages_map:
       project_packages_map[project] = set() # initialize
@@ -119,6 +119,7 @@ if __name__ == '__main__':
       # after new package innovations are done, put new package into current packages
       project_packages_map[project].add(new_package)
 
+  print('[debug] {' + str(datetime.datetime.now()) + '} Done innovations from stdin. Start write new mem tables.')
   write_project_packages_mem_table(project_packages_map)
   write_innovations_mem_table(innovations)
 
