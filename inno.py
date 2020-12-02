@@ -8,6 +8,8 @@ def parseline(line):
   timestamp, project, author, packages = tokens[0], tokens[1], tokens[2], tokens[3:]
   return project, timestamp, author, packages
 
+###############################################################################
+
 def write_project_packages_mem_table(table):
   """ to run script on raw data tables one by one (to avoid consuming too much memory)
   we need to memorize most up-to-date project packages table """
@@ -31,6 +33,8 @@ def read_project_packages_mem_table():
       table[project] = set(packages)
     print('Read project packages mem table with ' + str(len(table)) + ' project entries')
     return table
+
+###############################################################################
 
 def write_innovations_mem_table(table):
   """ run script on raw tables one by one produce innovations map each time """
@@ -58,6 +62,8 @@ def read_innovations_mem_table():
     print('Read innovations mem table with ' + str(len(table)) + ' innovation entries')
     return table
 
+###################################################################################################
+
 if __name__ == '__main__':
 
   if len(sys.argv) >= 2 and sys.argv[1] == 'projects':
@@ -72,6 +78,8 @@ if __name__ == '__main__':
     for project in topkeys:
       print(project)
     sys.exit(0)
+
+###############################################################################
 
   if len(sys.argv) >= 3 and sys.argv[1] == 'in-project-innos':
     project = sys.argv[2]
@@ -92,6 +100,8 @@ if __name__ == '__main__':
       print(';'.join([pkgA, pkgB, project, timestamp, author, '1']))
     sys.exit(0)
 
+###############################################################################
+
 # project -> seen packages set
   project_packages_map = read_project_packages_mem_table()
 # package pair -> (earliest seen) project, timestamp, author, occurance count
@@ -99,13 +109,20 @@ if __name__ == '__main__':
 
   print('[debug] {' + str(datetime.datetime.now()) + '} Done read mem tables. Start read from stdin.')
   line_count = 0
+  stdin_limit = None if len(sys.argv) <= 1 else int(sys.argv[1])
+
   for line in sys.stdin:
     line_count += 1
+    if stdin_limit is not None and line_count > stdin_limit:
+      break # ignore more stdin if limit specified
+
     if line_count % 500 == 0:
       print('[debug] {' + str(datetime.datetime.now()) + '} Processing stdin line ' + str(line_count) + '.')
+
     project, timestamp, author, packages = parseline(line)
     if project not in project_packages_map:
       project_packages_map[project] = set() # initialize
+
     for new_package in packages: # consider new package with every existing package
       if new_package in project_packages_map[project]:
         continue # package is already in current packages
