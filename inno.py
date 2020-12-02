@@ -15,9 +15,7 @@ def write_project_packages_mem_table(table):
   """ to run script on raw data tables one by one (to avoid consuming too much memory)
   we need to memorize most up-to-date project packages table """
   with open('data/ppkgs.mem', 'w') as f:
-    for project in table:
-      packages = table[project]
-      f.write(project + ';' + ';'.join(packages) + '\n')
+    f.write('\n'.join(project + ';' + ';'.join(table[project]) for project in table))
     print('Written project packages mem table')
     return
 
@@ -39,11 +37,12 @@ def read_project_packages_mem_table():
 
 def write_innovations_mem_table(table):
   """ run script on raw tables one by one produce innovations map each time """
+  def mk_entry(innovation):
+    pkgA, pkgB = innovation
+    project, timestamp, author, count = table[innovation]
+    return ';'.join([pkgA, pkgB, project, timestamp, author, str(count)])
   with open('data/innos.mem', 'w') as f:
-    for innovation in table:
-      project, timestamp, author, count = table[innovation]
-      pkgA, pkgB = innovation
-      f.write(';'.join([pkgA, pkgB, project, timestamp, author, str(count)]) + '\n')
+    f.write('\n'.join(mk_entry(innovation) for innovation in table))
     print('Written innovations mem table')
     return
 
