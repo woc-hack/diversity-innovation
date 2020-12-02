@@ -1,5 +1,6 @@
 import sys
 import datetime
+import gzip
 
 def parseline(line):
   """ parse by line from PtaPkgRJS.{0..127}.s tables
@@ -109,35 +110,41 @@ if __name__ == '__main__':
 
   print('[debug] {' + str(datetime.datetime.now()) + '} Done read mem tables. Start read from stdin.')
   line_count = 0
-  stdin_limit = None if len(sys.argv) <= 1 else int(sys.argv[1])
+  if len(sys.argv) <= 2:
+    print('Specify data process range! (lower inclusive, upper exclusive)')
+    sys.exit(-1)
+  read_data_lower = int(sys.argv[1])
+  read_data_upper = int(sys.argv[2])
+  print('Read data to process from line >= ' + str(read_data_lower) + ' to < ' + str(read_data_upper))
 
-  for line in sys.stdin:
-    line_count += 1
+  with gzip.open('/da0_data/play/JSthruMaps/tPaPkgRJS.s', 'r') as data_f:
+    for line in data_f:
+      line_count += 1
+      if line_count < read_data_lower:
+        continue # not yet start process data in range
+      if line_count >= read_data_upper:
+        print('[debug] {' + str(datetime.datetime.now()) + '} Done entire specified data process range.')
+        break # ignore more stdin if limit specified
 
-    project, timestamp, author, packages = parseline(line)
-    if project not in project_packages_map:
-      project_packages_map[project] = set() # initialize
+      project, timestamp, author, packages = parseline(line)
+      if project not in project_packages_map:
+        project_packages_map[project] = set() # initialize
 
-    for new_package in packages: # consider new package with every existing package
-      if new_package in project_packages_map[project]:
-        continue # package is already in current packages
-      for current_package in project_packages_map[project]:
-        pair = tuple(sorted([new_package, current_package])) # unorder
-        if pair not in innovations:
-          innovations[pair] = (project, timestamp, author, 1)
-        else: # innovation exists, only update count
-          current_project, current_timestamp, current_author, current_count = innovations[pair]
-          innovations[pair] = (current_project, current_timestamp, current_author, 1 + current_count)
-      # after new package innovations are done, put new package into current packages
-      project_packages_map[project].add(new_package)
+      for new_package in packages: # consider new package with every existing package
+        if new_package in project_packages_map[project]:
+          continue # package is already in current packages
+        for current_package in project_packages_map[project]:
+          pair = tuple(sorted([new_package, current_package])) # unorder
+          if pair not in innovations:
+            innovations[pair] = (project, timestamp, author, 1)
+          else: # innovation exists, only update count
+            current_project, current_timestamp, current_author, current_count = innovations[pair]
+            innovations[pair] = (current_project, current_timestamp, current_author, 1 + current_count)
+        # after new package innovations are done, put new package into current packages
+        project_packages_map[project].add(new_package)
 
-    if line_count % 500 == 0:
-      print('[debug] {' + str(datetime.datetime.now()) + '} Done processing stdin line ' + str(line_count) + '.')
-    if stdin_limit is not None and line_count == stdin_limit - 1:
-      print('[debug] {' + str(datetime.datetime.now()) + '} Done second-to-last stdin line according to specified limit.')
-    if stdin_limit is not None and line_count >= stdin_limit:
-      print('[debug] {' + str(datetime.datetime.now()) + '} Specified stdin limit is hit at ' + str(stdin_limit) + '.')
-      break # ignore more stdin if limit specified
+      if line_count % 1000 == 999:
+        print('[debug] {' + str(datetime.datetime.now()) + '} Done processing stdin line ' + str(line_count) + '.')
 
   print('[debug] {' + str(datetime.datetime.now()) + '} Done innovations from stdin. Start write new mem tables.')
   write_project_packages_mem_table(project_packages_map)
