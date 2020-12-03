@@ -36,13 +36,13 @@ def db_mk_connection():
 #     print(e) # continue script without exit
 
 def db_insert_many(connection, new_innovations):
-  def generator():
-    for innovation in new_innovations:
-      pkgA, pkgB = innovation
-      project, timestamp, author = new_innovations[innovation]
-      yield (pkgA, pkgB, project, int(timestamp), author, 1)
+  def entry(innovation):
+    pkgA, pkgB = innovation
+    project, timestamp, author, count = new_innovations[innovation]
+    return (pkgA, pkgB, project, int(timestamp), author, count)
   try:
-    connection.executemany('INSERT INTO innovations(pkgA, pkgB, project, timestamp, author, count) VALUES(?,?,?,?,?,?)', generator())
+    connection.executemany('INSERT INTO innovations(pkgA, pkgB, project, timestamp, author, count) VALUES(?,?,?,?,?,?)', (entry(innovation) for innovation in new_innovations))
+    connection.commit()
   except sqlite3.Error as e:
     print('Error inserting new innovations table into database.')
     sys.exit(42)
@@ -58,12 +58,12 @@ def db_insert_many(connection, new_innovations):
 #     print(e) # continue script without exit
 
 def db_update_many(connection, innovations):
-  def generator():
-    for innovation in innovations:
-      pkgA, pkgB = innovation
-      yield (pkgA, pkgB, innovations[innovation])
+  def entry(innovation):
+    pkgA, pkgB = innovation
+    return (pkgA, pkgB, innovations[innovation])
   try:
-    connection.executemany('UPDATE innovations SET count = ? WHERE pkgA = ? AND pkgB = ?', generator())
+    connection.executemany('UPDATE innovations SET count = ? WHERE pkgA = ? AND pkgB = ?', (entry(innovation) for innovation in innovations))
+    connection.commit()
   except sqlite3.Error as e:
     print('Error updating innovations count table in database.')
     sys.exit(43)
@@ -231,7 +231,9 @@ if __name__ == '__main__':
 
 #   print('[debug] {' + str(datetime.datetime.now()) + '} Done innovations from stdin. Start write new mem tables.')
   write_project_packages_mem_table(project_packages_map)
+  print('Bulk update ' + str(len(tmp_innovations_map)) + ' innovation entries.')
   db_update_many(db_connection, tmp_innovations_map)
+  print('Bulk insert ' + str(len(tmp_new_innovations_map)) + ' new innovation entries.')
   db_insert_many(db_connection, tmp_new_innovations_map)
   db_connection.close()
 #   write_innovations_mem_table(innovations)
