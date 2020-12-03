@@ -1,6 +1,7 @@
 import sys
 import datetime
 import gzip
+import sqlite3
 
 def parseline(line):
   """ parse by line from PtaPkgRJS.{0..127}.s tables
@@ -8,6 +9,53 @@ def parseline(line):
   tokens = line.strip().split(';')
   timestamp, project, author, packages = tokens[0], tokens[1], tokens[2], tokens[3:]
   return project, timestamp, author, packages
+
+###############################################################################
+
+def db_mk_connection():
+  try:
+    connection = sqlite3.connect('data/innos.db')
+    if connection is None:
+      print('Not connected to database.')
+      sys.exit(42)
+    print('[debug] {' + str(datetime.datetime.now()) + '} Connected to database.')
+    return connection
+  except sqlite3.Error as e:
+    print(e)
+    sys.exit(-1)
+
+def db_insert(connection, values):
+  pkgA, pkgB, project, timestamp, author = values
+  try:
+    c = connection.cursor()
+    c.execute('INSERT INTO innovations(pkgA, pkgB, project, timestamp, author, count) VALUES(?,?,?,?,?,?)', (pkgA, pkgB, project, int(timestamp), author, 1))
+  except sqlite3.Error as e:
+    print('Error inserting innovation entry into database.')
+    print(pkgA, pkgB, project, timestamp, author)
+    print(e) # continue script without exit
+
+def db_update_count(connection, values):
+  pkgA, pkgB, count = values
+  try:
+    c = connection.cursor()
+    c.execute('UPDATE innovations SET count = ? WHERE pkgA = ? AND pkgB = ?', (count, pkgA, pkgB))
+  except sqlite3.Error as e:
+    print('Error updating count for innovation entry in database.')
+    print(pkgA, pkgB)
+    print(e) # continue script without exit
+
+def db_select_innovation_count(connection, values):
+  pkgA, pkgB = values
+  try:
+    c = connection.cursor()
+    c.execute('SELECT count FROM innovations WHERE pkgA = ? AND pkgB = ?', (pkgA, pkgB))
+    rows = c.fetchall()
+    return rows[0][0] if len(rows) > 0 else None
+  except sqlite3.Error as e:
+    print('Error selecting innovation entry in database.')
+    print(pkgA, pkgB)
+    print(e)
+    return None
 
 ###############################################################################
 
@@ -104,10 +152,10 @@ if __name__ == '__main__':
 
 # project -> seen packages set
   project_packages_map = read_project_packages_mem_table()
-# package pair -> (earliest seen) project, timestamp, author, occurance count
-  innovations = read_innovations_mem_table()
-
-  print('[debug] {' + str(datetime.datetime.now()) + '} Done read mem tables. Start read from stdin.')
+# # package pair -> (earliest seen) project, timestamp, author, occurance count
+#   innovations = read_innovations_mem_table()
+#
+#   print('[debug] {' + str(datetime.datetime.now()) + '} Done read mem tables. Start read from stdin.')
   line_count = 0
   if len(sys.argv) <= 2:
     print('Specify data process range! (lower inclusive, upper exclusive)')
@@ -116,6 +164,7 @@ if __name__ == '__main__':
   read_data_upper = int(sys.argv[2])
   print('Read data to process from line >= ' + str(read_data_lower) + ' to < ' + str(read_data_upper))
 
+  db_connection = mk_db_connection()
   with gzip.open('/da0_data/play/JSthruMaps/tPaPkgRJS.s', 'r') as data_f:
     for line in data_f:
       line_count += 1
@@ -133,19 +182,20 @@ if __name__ == '__main__':
         if new_package in project_packages_map[project]:
           continue # package is already in current packages
         for current_package in project_packages_map[project]:
-          pair = tuple(sorted([new_package, current_package])) # unorder
-          if pair not in innovations:
-            innovations[pair] = (project, timestamp, author, 1)
-          else: # innovation exists, only update count
-            current_project, current_timestamp, current_author, current_count = innovations[pair]
-            innovations[pair] = (current_project, current_timestamp, current_author, 1 + current_count)
+          pkgA, pkgB = tuple(sorted([new_package, current_package]))
+          current_count = db_select_innovation_count(db_connection, (pkgA, pkgB))
+          if current_count is None:
+            db_insert(db_connection, (pkgA, pkgB, project, timestamp, author))
+          else:
+            db_update_count(db_connection, (pkgA, pkgB, 1 + current_count))
+          db_connection.commit()
         # after new package innovations are done, put new package into current packages
         project_packages_map[project].add(new_package)
 
       if line_count % 10000 == 9999:
         print('[debug] {' + str(datetime.datetime.now()) + '} Done processing stdin line ' + str(line_count) + '.')
 
-  print('[debug] {' + str(datetime.datetime.now()) + '} Done innovations from stdin. Start write new mem tables.')
+#   print('[debug] {' + str(datetime.datetime.now()) + '} Done innovations from stdin. Start write new mem tables.')
   write_project_packages_mem_table(project_packages_map)
-  write_innovations_mem_table(innovations)
+#   write_innovations_mem_table(innovations)
 
