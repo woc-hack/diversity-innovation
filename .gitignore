@@ -3,4 +3,5 @@
 *.mem
 *.mem.*
 *.db
+*.db-journal
 *.pyc
