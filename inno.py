@@ -164,7 +164,7 @@ if __name__ == '__main__':
   read_data_upper = int(sys.argv[2])
   print('Read data to process from line >= ' + str(read_data_lower) + ' to < ' + str(read_data_upper))
 
-  db_connection = mk_db_connection()
+  db_connection = db_mk_connection()
   with gzip.open('/da0_data/play/JSthruMaps/tPaPkgRJS.s', 'r') as data_f:
     for line in data_f:
       line_count += 1
@@ -197,5 +197,6 @@ if __name__ == '__main__':
 
 #   print('[debug] {' + str(datetime.datetime.now()) + '} Done innovations from stdin. Start write new mem tables.')
   write_project_packages_mem_table(project_packages_map)
+  db_connection.close()
 #   write_innovations_mem_table(innovations)
 
