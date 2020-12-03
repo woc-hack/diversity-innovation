@@ -25,25 +25,48 @@ def db_mk_connection():
     print(e)
     sys.exit(-1)
 
-def db_insert(connection, values):
-  pkgA, pkgB, project, timestamp, author = values
-  try:
-    c = connection.cursor()
-    c.execute('INSERT INTO innovations(pkgA, pkgB, project, timestamp, author, count) VALUES(?,?,?,?,?,?)', (pkgA, pkgB, project, int(timestamp), author, 1))
-  except sqlite3.Error as e:
-    print('Error inserting innovation entry into database.')
-    print(pkgA, pkgB, project, timestamp, author)
-    print(e) # continue script without exit
+# def db_insert(connection, values):
+#   pkgA, pkgB, project, timestamp, author = values
+#   try:
+#     c = connection.cursor()
+#     c.execute('INSERT INTO innovations(pkgA, pkgB, project, timestamp, author, count) VALUES(?,?,?,?,?,?)', (pkgA, pkgB, project, int(timestamp), author, 1))
+#   except sqlite3.Error as e:
+#     print('Error inserting innovation entry into database.')
+#     print(pkgA, pkgB, project, timestamp, author)
+#     print(e) # continue script without exit
 
-def db_update_count(connection, values):
-  pkgA, pkgB, count = values
+def db_insert_many(connection, new_innovations):
+  def generator():
+    for innovation in new_innovations:
+      pkgA, pkgB = innovation
+      project, timestamp, author = new_innovations[innovation]
+      yield (pkgA, pkgB, project, int(timestamp), author, 1)
   try:
-    c = connection.cursor()
-    c.execute('UPDATE innovations SET count = ? WHERE pkgA = ? AND pkgB = ?', (count, pkgA, pkgB))
+    connection.executemany('INSERT INTO innovations(pkgA, pkgB, project, timestamp, author, count) VALUES(?,?,?,?,?,?)', generator())
   except sqlite3.Error as e:
-    print('Error updating count for innovation entry in database.')
-    print(pkgA, pkgB)
-    print(e) # continue script without exit
+    print('Error inserting new innovations table into database.')
+    sys.exit(42)
+
+# def db_update_count(connection, values):
+#   pkgA, pkgB, count = values
+#   try:
+#     c = connection.cursor()
+#     c.execute('UPDATE innovations SET count = ? WHERE pkgA = ? AND pkgB = ?', (count, pkgA, pkgB))
+#   except sqlite3.Error as e:
+#     print('Error updating count for innovation entry in database.')
+#     print(pkgA, pkgB)
+#     print(e) # continue script without exit
+
+def db_update_many(connection, innovations):
+  def generator():
+    for innovation in innovations:
+      pkgA, pkgB = innovation
+      yield (pkgA, pkgB, innovations[innovation])
+  try:
+    connection.executemany('UPDATE innovations SET count = ? WHERE pkgA = ? AND pkgB = ?', generator())
+  except sqlite3.Error as e:
+    print('Error updating innovations count table in database.')
+    sys.exit(43)
 
 def db_select_innovation_count(connection, values):
   pkgA, pkgB = values
@@ -166,6 +189,8 @@ if __name__ == '__main__':
   print('Read data to process from line >= ' + str(read_data_lower) + ' to < ' + str(read_data_upper))
 
   db_connection = db_mk_connection()
+  tmp_innovations_map = {} # to be updated (count) in database
+  tmp_new_innovations_map = {} # to be inserted into database
   with gzip.open('/da0_data/play/JSthruMaps/tPaPkgRJS.s', 'r') as data_f:
     for line in data_f:
       line_count += 1
@@ -183,13 +208,21 @@ if __name__ == '__main__':
         if new_package in project_packages_map[project]:
           continue # package is already in current packages
         for current_package in project_packages_map[project]:
+
           pkgA, pkgB = tuple(sorted([new_package, current_package]))
-          current_count = db_select_innovation_count(db_connection, (pkgA, pkgB))
-          if current_count is None:
-            db_insert(db_connection, (pkgA, pkgB, project, timestamp, author))
+          if (pkgA, pkgB) in tmp_innovations_map:
+            current_count = tmp_innovations_map[(pkgA, pkgB)]
+            tmp_innovations_map[(pkgA, pkgB)] = 1 + current_count
+          elif (pkgA, pkgB) in tmp_new_innovations_map:
+            inno_project, inno_timestamp, inno_author, current_count = tmp_new_innovations_map[(pkgA, pkgB)]
+            tmp_new_innovations_map[(pkgA, pkgB)] = (inno_project, inno_timestamp, inno_author, 1 + current_count)
           else:
-            db_update_count(db_connection, (pkgA, pkgB, 1 + current_count))
-          db_connection.commit()
+            current_count = db_select_innovation_count(db_connection, (pkgA, pkgB))
+            if current_count is None:
+              tmp_new_innovations_map[(pkgA, pkgB)] = (project, timestamp, author, 1)
+            else:
+              tmp_innovations_map[(pkgA, pkgB)] = 1 + current_count
+
         # after new package innovations are done, put new package into current packages
         project_packages_map[project].add(new_package)
 
@@ -198,6 +231,8 @@ if __name__ == '__main__':
 
 #   print('[debug] {' + str(datetime.datetime.now()) + '} Done innovations from stdin. Start write new mem tables.')
   write_project_packages_mem_table(project_packages_map)
+  db_update_many(db_connection, tmp_innovations_map)
+  db_insert_many(db_connection, tmp_new_innovations_map)
   db_connection.close()
 #   write_innovations_mem_table(innovations)
 
