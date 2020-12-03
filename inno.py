@@ -18,6 +18,7 @@ def db_mk_connection():
     if connection is None:
       print('Not connected to database.')
       sys.exit(42)
+    connection.text_factory = lambda s: unicode(s, 'utf-8', 'ignore')
     print('[debug] {' + str(datetime.datetime.now()) + '} Connected to database.')
     return connection
   except sqlite3.Error as e:
