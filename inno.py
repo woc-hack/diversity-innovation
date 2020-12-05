@@ -124,6 +124,8 @@ if __name__ == '__main__':
       if line_count >= read_data_upper:
         print('[debug] {' + str(datetime.datetime.now()) + '} Done entire specified data process range.')
         break # ignore more stdin if limit specified
+      if line_count in [3043426]:
+        continue # line too long
 
       project, timestamp, author, packages = parseline(line)
       if project not in project_packages_map:
