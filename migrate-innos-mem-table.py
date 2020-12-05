@@ -4,39 +4,41 @@ import sqlite3
 import sys
 import datetime
 
-# Create database connection
-connection = None
-try:
-  connection = sqlite3.connect('data/innos.db')
-  print(sqlite3.version)
-except sqlite3.Error as e:
-  print(e)
-  sys.exit(-1)
-if connection is None:
-  print('Connection not established.')
-  sys.exit(1)
-else:
-  print('[debug] {' + str(datetime.datetime.now()) + '} Database connected.')
+def create_table(connection):
+  sql_create_table = """ CREATE TABLE IF NOT EXISTS innovations (
+                                pkgA text NOT NULL,
+                                pkgB text NOT NULL,
+                                project text NOT NULL,
+                                timestamp integer NOT NULL,
+                                author text NOT NULL,
+                                count integer NOT NULL,
+                                PRIMARY KEY (pkgA, pkgB)); """
+  sql_create_index_on_author = """ CREATE INDEX idx_author ON innovations(author); """
+  try:
+    c = connection.cursor()
+    c.execute(sql_create_table)
+    c.execute(sql_create_index_on_author)
+    connection.commit()
+  except sqlite3.Error as e:
+    print(e)
+    sys.exit(-1)
+  print('[debug] {' + str(datetime.datetime.now()) + '} Created innovations table.')
+  return
 
-# Create database table for innovations
-sql_create_table = """ CREATE TABLE IF NOT EXISTS innovations (
-                              pkgA text NOT NULL,
-                              pkgB text NOT NULL,
-                              project text NOT NULL,
-                              timestamp integer NOT NULL,
-                              author text NOT NULL,
-                              count integer NOT NULL,
-                              PRIMARY KEY (pkgA, pkgB)); """
-sql_create_index_on_author = """ CREATE INDEX idx_author ON innovations(author); """
-try:
-  c = connection.cursor()
-  c.execute(sql_create_table)
-  c.execute(sql_create_index_on_author)
-  connection.commit()
-except sqlite3.Error as e:
-  print(e)
-  sys.exit(-1)
-print('[debug] {' + str(datetime.datetime.now()) + '} Created innovations table.')
+def get_connection():
+  connection = None
+  try:
+    connection = sqlite3.connect('data/innos.db')
+    print(sqlite3.version)
+  except sqlite3.Error as e:
+    print(e)
+    sys.exit(-1)
+  if connection is None:
+    print('Connection not established.')
+    sys.exit(1)
+  else:
+    print('[debug] {' + str(datetime.datetime.now()) + '} Database connected.')
+  return connection
 
 # Read current innovations mem table from file
 import inno
