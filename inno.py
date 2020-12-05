@@ -124,7 +124,10 @@ if __name__ == '__main__':
       if line_count >= read_data_upper:
         print('[debug] {' + str(datetime.datetime.now()) + '} Done entire specified data process range.')
         break # ignore more stdin if limit specified
-      if line_count in [3043426, 3050807, 3050808, 3067991, 3067992, 3127315, 4616934, 5225409]:
+      if line_count in [3043426, 3050807, 3050808, 3067991, 3067992, 3127315, 4616934, 5225409,
+          16876583, 18322303, 18322824, 18322934, 18323512, 18324553, 18326294, 18326757,
+          18327082, 18327143, 18327707, 18327849, 18327932, 20699005, 20699163, 20699599,
+          20699729, 20832248, 25887024, 38223498]:
         continue # line too long
 
       project, timestamp, author, packages = parseline(line)
