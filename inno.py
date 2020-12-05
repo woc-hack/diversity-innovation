@@ -150,6 +150,7 @@ if __name__ == '__main__':
       if line_count % 10000 == 9999:
         print('[debug] {' + str(datetime.datetime.now()) + '} Done processing stdin line ' + str(line_count) + '.')
 
+  print('Processed data upto (in/ex) ' + str(line_count))
   print('[debug] {' + str(datetime.datetime.now()) + '} Done innovations from stdin. Start write new mem tables.')
   write_project_packages_mem_table(project_packages_map)
   write_innovations_mem_table(innovations)
