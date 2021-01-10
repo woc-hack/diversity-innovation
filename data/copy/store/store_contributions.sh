@@ -7,6 +7,12 @@ echo $project | ~/lookup/getValues -f P2c | cut -d\; -f2 | ~/lookup/getValues c2
 do
   timestamp=$(echo $timestamp_author | cut -d\; -f2)
   author=$(echo $timestamp_author | cut -d\; -f3)
-  sqlite3 contributions.db "insert into contributions (project, timestamp, author) values (\"$project\", \"$timestamp\", \"$author\");"
+
+  month_year=$(date +"%-m;%Y" -d @$timestamp)
+  month=$(echo $month_year | cut -d\; -f1)
+  year=$(echo $month_year | cut -d\; -f2)
+  window=$(( ($month - 1) / 3 + ($year - 2008) * 4 ))
+
+  sqlite3 contributions.db "insert into contributions (project, timestamp, author, window) values (\"$project\", \"$timestamp\", \"$author\", $window);"
 done
 
