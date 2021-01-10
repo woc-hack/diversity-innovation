@@ -16,3 +16,5 @@ do
   sqlite3 contributions.db "insert into contributions (project, timestamp, author, window) values (\"$project\", \"$timestamp\", \"$author\", $window);"
 done
 
+echo $project >> projects-contributions-done.log
+
