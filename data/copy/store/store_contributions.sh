@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+
+project=$1
+echo "Lookup contributions for project $project"
+
+echo $project | ~/lookup/getValues -f P2c | cut -d\; -f2 | ~/lookup/getValues c2ta | while read -r timestamp_author
+do
+  timestamp=$(echo $timestamp_author | cut -d\; -f2)
+  author=$(echo $timestamp_author | cut -d\; -f3)
+  sqlite3 contributions.db "insert into contributions (project, timestamp, author) values (\"$project\", \"$timestamp\", \"$author\");"
+done
+
