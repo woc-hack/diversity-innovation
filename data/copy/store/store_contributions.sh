@@ -16,7 +16,7 @@ do
   year=$(echo $month_year | cut -d\; -f2)
   window=$(( ($month - 1) / 3 + ($year - 2008) * 4 ))
 
-  sqlite3 contributions.db "insert into contributions (project, timestamp, author, window) values (\"$project\", \"$timestamp\", \"$author\", $window);"
+  sqlite3 -init init.sql contributions.db "insert into contributions (project, timestamp, author, window) values (\"$project\", \"$timestamp\", \"$author\", $window);"
 done
 
 echo $project >> projects-contributions-done.log
