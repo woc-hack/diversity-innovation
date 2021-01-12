@@ -16,8 +16,18 @@ do
   year=$(echo $month_year | cut -d\; -f2)
   window=$(( ($month - 1) / 3 + ($year - 2008) * 4 ))
 
-  sqlite3 -init init.sql contributions.db "insert into contributions (project, author, window) values (\"$project\", \"$author\", $window);"
+  echo "$author;$window" >> "contributions.$project.tmp"
 done
 
+cat "contributions.$project.tmp" | sed "s/^/;/" | sort | uniq -c | while read -r line
+do
+  author=$(echo $line | cut -d\; -f2)
+  window=$(echo $line | cut -d\; -f3)
+  count=$(echo $line | cut -d\; -f1 | xargs)
+
+  sqlite3 -init init.sql contributions.db "insert into contributions (project, author, window, count) values (\"$project\", \"$author\", $window, $count);"
+done
+
+rm "contributions.$project.tmp"
 echo $project >> projects-contributions-done.log
 
