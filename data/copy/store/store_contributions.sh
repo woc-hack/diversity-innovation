@@ -28,6 +28,6 @@ do
   sqlite3 -init init.sql contributions.db "insert into contributions (project, author, window, count) values (\"$project\", \"$author\", $window, $count);"
 done
 
-rm "contributions.$project.tmp"
+rm -f "contributions.$project.tmp"
 echo $project >> projects-contributions-done.log
 
