@@ -1,10 +1,10 @@
 #!/usr/bin/env sh
 
 project=$1
-echo "Lookup contributions for project $project"
+# echo "Lookup contributions for project $project"
 
 entries=$(echo $project | ~/lookup/getValues -f P2c | wc -l)
-echo "Found $entries commits in project $project"
+# echo "Found $entries commits in project $project"
 
 echo $project | ~/lookup/getValues -f P2c | cut -d\; -f2 | ~/lookup/getValues c2ta | while read -r timestamp_author
 do
