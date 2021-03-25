@@ -1,6 +1,7 @@
 import sys
 import datetime
 import gzip
+import pickle
 
 def parseline(line):
   """ parse by line from PtaPkgRJS.{0..127}.s tables
@@ -14,23 +15,17 @@ def parseline(line):
 def write_project_packages_mem_table(table):
   """ to run script on raw data tables one by one (to avoid consuming too much memory)
   we need to memorize most up-to-date project packages table """
-  with open('data/ppkgs.mem', 'w') as f:
-    f.write('\n'.join(project + ';' + ';'.join(table[project]) for project in table))
-    print('Written project packages mem table')
+  with open('data/ppkgs.p', 'wb') as f:
+    pickle.dump(table, f)
+    print('Written project packages pickled table')
     return
 
 def read_project_packages_mem_table():
   """ counterpart to write_project_packages_mem_table,
   read the most up-to-date project packages table as baseline for future innovation """
-  with open('data/ppkgs.mem', 'r') as f:
-    table = {}
-    for line in f:
-      tokens = line.strip().split(';')
-      if len(tokens) <= 1: # ignore invalid lines
-        continue
-      project, packages = tokens[0], tokens[1:]
-      table[project] = set(packages)
-    print('Read project packages mem table with ' + str(len(table)) + ' project entries')
+  with open('data/ppkgs.p', 'rb') as f:
+    table = pickle.load(f)
+    print('Read project packages pickled table with ' + str(len(table)) + ' project entries')
     return table
 
 ###############################################################################
