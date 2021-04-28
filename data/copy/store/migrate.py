@@ -31,6 +31,8 @@ if __name__ == '__main__':
   c = connection.cursor()
   print('Connected to database')
   for i in range(lo, hi):
+    if i % 10000 == 0:
+      print('Migrate ' + str(i))
     entry = t[i]
     pkgA, pkgB, project, timestamp, author, impact = entry
     packages = pkgA + ';' + pkgB
