@@ -1,5 +1,6 @@
 from __future__ import print_function
 import sys
+import datetime
 import sqlite3
 
 def eprint(*args, **kwargs):
@@ -31,8 +32,8 @@ if __name__ == '__main__':
   c = connection.cursor()
   print('Connected to database')
   for i in range(lo, hi):
-    if i % 10000 == 0:
-      print('Migrate ' + str(i))
+    if i % 100000 == 0:
+      print('[debug] {' + str(datetime.datetime.now()) + '} Migrate ' + str(i) + '.')
     entry = t[i]
     pkgA, pkgB, project, timestamp, author, impact = entry
     packages = pkgA + ';' + pkgB
