@@ -32,7 +32,7 @@ if __name__ == '__main__':
   c = connection.cursor()
   print('Connected to database')
   for i in range(lo, hi):
-    if i % 100000 == 0:
+    if i % 1000000 == 0:
       print('[debug] {' + str(datetime.datetime.now()) + '} Migrate ' + str(i) + '.')
     entry = t[i]
     pkgA, pkgB, project, timestamp, author, impact = entry
