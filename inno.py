@@ -67,40 +67,47 @@ def read_innovations_mem_table():
 if __name__ == '__main__':
 
   if len(sys.argv) >= 2 and sys.argv[1] == 'projects':
-    projects = {}
-    for line in sys.stdin:
-      project, _t, _a, _p = parseline(line)
-      if project not in projects:
-        projects[project] = 1
-      else:
-        projects[project] = projects[project] + 1
-    topkeys = sorted(projects.keys(), key = lambda p: projects[p], reverse = True)
-    for project in topkeys:
-      print(project)
+    # projects = {}
+    # for line in sys.stdin:
+    #   project, _t, _a, _p = parseline(line)
+    #   if project not in projects:
+    #     projects[project] = 1
+    #   else:
+    #     projects[project] = projects[project] + 1
+    # topkeys = sorted(projects.keys(), key = lambda p: projects[p], reverse = True)
+    # for project in topkeys:
+    #   print(project)
     sys.exit(0)
 
 ###############################################################################
 
   if len(sys.argv) >= 3 and sys.argv[1] == 'in-project-innos':
-    project = sys.argv[2]
-    current_packages = set()
-    innovations = {}
-    for line in sys.stdin:
-      _p, timestamp, author, packages = parseline(line)
-      for new_package in packages: # consider new package with every current package
-        if new_package in current_packages:
-          continue # ignore package already in current packages
-        for current_package in current_packages:
-          pair = tuple(sorted([new_package, current_package]))
-          # it is not possible for pair to be already in innovations
-          innovations[pair] = (project, timestamp, author)
-        current_packages.add(new_package)
-    for pair in innovations:
-      pkgA, pkgB = pair
-      print(';'.join([pkgA, pkgB, project, timestamp, author, '1']))
+    # project = sys.argv[2]
+    # current_packages = set()
+    # innovations = {}
+    # for line in sys.stdin:
+    #   _p, timestamp, author, packages = parseline(line)
+    #   for new_package in packages: # consider new package with every current package
+    #     if new_package in current_packages:
+    #       continue # ignore package already in current packages
+    #     for current_package in current_packages:
+    #       pair = tuple(sorted([new_package, current_package]))
+    #       # it is not possible for pair to be already in innovations
+    #       innovations[pair] = (project, timestamp, author)
+    #     current_packages.add(new_package)
+    # for pair in innovations:
+    #   pkgA, pkgB = pair
+    #   print(';'.join([pkgA, pkgB, project, timestamp, author, '1']))
     sys.exit(0)
 
 ###############################################################################
+# How-To
+# run `python inno.py <low_line_index> <high_line_index> &`
+# requires and updates `data/innos.mem` and `data/ppkgs.mem`
+# `data/ppkgs.mem` should contain the complete most recent set
+# `data/innos.mem` should be either the complete most recent set or empty
+# if empty, must migrate the resulted table into the complete most recent set
+# see `data/copy/store/migrate.py`
 
 # project -> seen packages set
   project_packages_map = read_project_packages_mem_table()
