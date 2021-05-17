@@ -21,8 +21,9 @@
 # EOF
 
 # sqlite3 innos.db "SELECT MIN(timestamp), MAX(timestamp) FROM innovations;" > aggregates-timestamp-range.log
-sqlite3 innos.db "SELECT COUNT(DISTINCT project) FROM innovations;" > aggregates-count-project.log
-sqlite3 innos.db "SELECT COUNT(DISTINCT author) FROM innovations;" > aggregates-count-author.log
+# sqlite3 innos.db "SELECT COUNT(DISTINCT project) FROM innovations;" > aggregates-count-project.log
+# sqlite3 innos.db "SELECT COUNT(DISTINCT author) FROM innovations;" > aggregates-count-author.log
 
-sqlite3 innos.db "SELECT COUNT(*), project FROM innovations WHERE impact >= 2 GROUP BY project;" > aggregates-count-by-project.log
+# sqlite3 innos.db "SELECT COUNT(*), project FROM innovations WHERE impact >= 2 GROUP BY project;" > aggregates-count-by-project.log
+sqlite3 innos.db "SELECT COUNT(*), author FROM innovations WHERE impact >= 2 GROUP BY author;" > aggregates-count-by-author.log
 
